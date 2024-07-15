@@ -10,28 +10,37 @@ const Calculator = () => {
     const [previousValue, setPreviousValue] = useState('');
 
     const handleButtonClick = (value) => {
-        if (value === 'clear') {
-            clearDisplay();
-        } else if (value === 'pos-neg') {
-            toggleSign();
-        } else if (value === '%') {
-            percentage();
-        } else if (value === '/' || value === '*' || value === '-' || value === '+') {
-            setOperator(value);
-            if (currentValue !== '') {
-                setPreviousValue(currentValue);
-                setCurrentValue('');
-                setDisplayValue((prevDisplay) => prevDisplay + ' ' + value);
-            }
-        } else if (value === '=') {
-            if (currentValue !== '' && previousValue !== '' && operator !== '') {
-                calculate();
-            } else {
-                showErrorAlert('Error: Incomplete expression. Please enter both numbers and an operator.');
-            }
-        } else {
-            
-            appendValue(value);
+        switch (value) {
+            case 'clear':
+                clearDisplay();
+                break;
+            case 'pos-neg':
+                toggleSign();
+                break;
+            case '%':
+                percentage();
+                break;
+            case '/':
+            case '*':
+            case '-':
+            case '+':
+                setOperator(value);
+                if (currentValue !== '') {
+                    setPreviousValue(currentValue);
+                    setCurrentValue('');
+                    setDisplayValue(prevDisplay => prevDisplay + ' ' + value);
+                }
+                break;
+            case '=':
+                if (currentValue !== '' && previousValue !== '' && operator !== '') {
+                    calculate();
+                } else {
+                    showErrorAlert('Error: Incomplete expression. Please enter both numbers and an operator.');
+                }
+                break;
+            default:
+                appendValue(value);
+                break;
         }
     };
 
@@ -43,7 +52,7 @@ const Calculator = () => {
     };
 
     const toggleSign = () => {
-        setCurrentValue((prevValue) => {
+        setCurrentValue(prevValue => {
             if (prevValue.startsWith('-')) {
                 return prevValue.slice(1);
             } else {
@@ -53,26 +62,27 @@ const Calculator = () => {
     };
 
     const percentage = () => {
-        setCurrentValue((prevValue) => {
+        setCurrentValue(prevValue => {
             const floatValue = parseFloat(prevValue);
             return (floatValue / 100).toString();
         });
     };
 
     const appendValue = (value) => {
-        setCurrentValue((prevValue) => {
-           
+        // Handle appending value to current value and display value
+        setCurrentValue(prevValue => {
             if (prevValue === '0' && value !== '.') {
-                return value.toString(); 
+                return value.toString();
             } else {
                 return prevValue + value;
             }
         });
 
-        setDisplayValue((prevDisplay) => {
-        
-            if (prevDisplay === '0' || operator) {
+        setDisplayValue(prevDisplay => {
+            if (displayValue === '0' && value !== '.') {
                 return value.toString();
+            } else if (operator) {
+                return prevDisplay + ' ' + value;
             } else {
                 return prevDisplay + value;
             }
@@ -87,13 +97,13 @@ const Calculator = () => {
                 operation: operator,
             });
 
-            if (response.data.success) {
+            if (response.data.result !== undefined) {
                 setDisplayValue(response.data.result.toString());
                 setCurrentValue(response.data.result.toString());
                 setOperator('');
                 setPreviousValue('');
             } else {
-                showErrorAlert('Error: ' + response.data.error);
+                showErrorAlert('Error: Calculation failed. Please try again.');
             }
         } catch (error) {
             console.error('Calculation error:', error);
